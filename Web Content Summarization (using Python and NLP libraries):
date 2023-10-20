@@ -1,0 +1,46 @@
+import requests
+from bs4 import BeautifulSoup
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize, sent_tokenize
+
+def summarize_web_content(url):
+    # Fetch the web page content
+    response = requests.get(url)
+    content = response.text
+
+    # Parse the HTML content
+    soup = BeautifulSoup(content, 'html.parser')
+
+    # Extract the text from the parsed HTML
+    text = " ".join([p.text for p in soup.find_all('p')])
+
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Remove stopwords
+    stop_words = set(stopwords.words('english'))
+    words = word_tokenize(text)
+    filtered_text = [word for word in words if word.lower() not in stop_words]
+
+    # Calculate word frequencies
+    word_frequencies = {}
+    for word in filtered_text:
+        if word not in word_frequencies:
+            word_frequencies[word] = 1
+        else:
+            word_frequencies[word] += 1
+
+    # Score sentences based on word frequency
+    sentence_scores = {}
+    for sentence in sentences:
+        for word in word_tokenize(sentence):
+            if word in word_frequencies:
+                if sentence not in sentence_scores:
+                    sentence_scores[sentence] = word_frequencies[word]
+                else:
+                    sentence_scores[sentence] += word_frequencies[word]
+
+    # Get the summary by selecting top sentences
+    summary = " ".join(sorted(sentence_scores, key=sentence_scores.get, reverse=True)[:3])
+
+    return summary
