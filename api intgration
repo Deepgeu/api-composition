@@ -1,0 +1,18 @@
+from flask import Flask, request, jsonify
+
+app = Flask(__name)
+
+@app.route('/summarize', methods=['POST'])
+def summarize():
+    data = request.json
+    url = data['url']
+    
+    if url.endswith('.mp4'):
+        video_summary = summarize_video(url)
+        return jsonify({'summary': video_summary})
+    else:
+        web_summary = summarize_web_content(url)
+        return jsonify({'summary': web_summary})
+
+if __name__ == '__main__':
+    app.run()
